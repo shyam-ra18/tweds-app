@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TwedValidation } from "@/lib/validations/tweds";
 import { createTweds } from "@/lib/actions/twed.actions";
 // import { updateUser } from "@/lib/actions/user.actions";
+import { useOrganization } from '@clerk/nextjs';
 
 
 
@@ -39,6 +40,7 @@ interface Props {
 function PostTwed({ userId }: { userId: string }) {
     const router = useRouter();
     const pathname = usePathname();
+    const { organization } = useOrganization();
 
     const form = useForm({
         resolver: zodResolver(TwedValidation),
@@ -53,7 +55,7 @@ function PostTwed({ userId }: { userId: string }) {
         await createTweds({
             text: values.twed,
             author: userId,
-            communityId: null,
+            communityId: organization ? organization.id : null,
             path: pathname
         })
 

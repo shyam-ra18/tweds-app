@@ -5,6 +5,7 @@ import Tweds from "../models/twed.model";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
 import { revalidatePath } from "next/cache";
+import Community from "../models/community.model";
 
 interface Params {
   text: string;
@@ -17,16 +18,26 @@ export async function createTweds({ text, author, communityId, path }: Params) {
   try {
     connectToDB();
 
+    const communityIdObject = await Community.findOne(
+      { id: communityId },
+      { _id: 1 }
+    );
+
     const createdTweds = await Tweds.create({
       text,
       author,
-      communityId: null,
+      communityId: communityIdObject,
     });
 
     await User.findByIdAndUpdate(author, {
       $push: { tweds: createdTweds._id },
     });
 
+    if (communityIdObject) {
+      await Community.findByIdAndUpdate(communityIdObject, {
+        $push: { tweds: createdTweds._id },
+      });
+    }
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Error creating Tweds ${error.message}`);
